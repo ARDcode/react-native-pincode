@@ -118,6 +118,7 @@ export type IProps = {
 export type IState = {
   internalPinStatus: PinResultStatus
   pinLocked: boolean
+
 }
 
 const disableLockScreenDefault = false;
@@ -128,15 +129,19 @@ const touchIDDisabledDefault = false;
 const touchIDTitleDefault = 'Authentication Required';
 
 class PINCode extends React.PureComponent<IProps, IState> {
+
   static defaultProps: Partial<IProps> = {
     styleMainContainer: null
   }
+  enterCodeRef: React.RefObject<PinCodeEnter>;
 
   constructor(props: IProps) {
     super(props);
     this.state = { internalPinStatus: PinResultStatus.initial, pinLocked: false };
+    this.enterCodeRef = React.createRef();
     this.changeInternalStatus = this.changeInternalStatus.bind(this);
     this.renderLockedPage = this.renderLockedPage.bind(this);
+    this.triggerTouchID = this.triggerTouchID.bind(this);
     AsyncStorage.getItem(this.props.timePinLockedAsyncStorageName || timePinLockedAsyncStorageNameDefault).then((val) => {
       this.setState({ pinLocked: !!val });
     }).catch(error => {
@@ -148,6 +153,10 @@ class PINCode extends React.PureComponent<IProps, IState> {
     if (status === PinResultStatus.initial) this.setState({ pinLocked: false });
     this.setState({ internalPinStatus: status });
   };
+
+  triggerTouchID = () => {
+    this.enterCodeRef.current?.launchTouchID();
+  }
 
   renderLockedPage = () => {
     return (
@@ -253,6 +262,7 @@ class PINCode extends React.PureComponent<IProps, IState> {
           />}
         {status === PinStatus.enter &&
           <PinCodeEnter
+              ref={this.enterCodeRef}
             passcodeFallback={this.props.passcodeFallback}
             buttonDeleteComponent={this.props.buttonDeleteComponent}
             buttonDeleteText={this.props.buttonDeleteText}
